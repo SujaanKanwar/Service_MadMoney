@@ -8,7 +8,7 @@ namespace MadMoney
 {
     [Serializable]
     [DataContract]
-    public class APKStaticStore
+    public class APKNode
     {        
         [DataMember(Name="Value")]
         public string value { get; set; }

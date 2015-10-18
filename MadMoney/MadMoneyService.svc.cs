@@ -15,7 +15,7 @@ namespace MadMoney
         public UserCreateResponse CreateUser(UserCreateRequest userCreateRequest)
         {
             string userAddress = string.Empty; string failureDesc = string.Empty;
-            bool isSuccess = false; APKStaticStore[] apkTreeStore = null;
+            bool isSuccess = false; List<APKNode> apkTreeStore = null;
 
             if (ValidateUserCreateRequest(userCreateRequest))
             {

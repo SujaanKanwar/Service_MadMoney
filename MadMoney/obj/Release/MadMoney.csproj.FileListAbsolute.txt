@@ -3,3 +3,8 @@ C:\Users\Sujan\Documents\Work\MadMoney\MadMoney\bin\MadMoney.pdb
 C:\Users\Sujan\Documents\Work\MadMoney\MadMoney\obj\Release\MadMoney.csprojResolveAssemblyReference.cache
 C:\Users\Sujan\Documents\Work\MadMoney\MadMoney\obj\Release\MadMoney.dll
 C:\Users\Sujan\Documents\Work\MadMoney\MadMoney\obj\Release\MadMoney.pdb
+C:\Users\Sujan\Documents\Work\Service_MadMoney\MadMoney\bin\MadMoney.dll
+C:\Users\Sujan\Documents\Work\Service_MadMoney\MadMoney\bin\MadMoney.pdb
+C:\Users\Sujan\Documents\Work\Service_MadMoney\MadMoney\obj\Release\MadMoney.csprojResolveAssemblyReference.cache
+C:\Users\Sujan\Documents\Work\Service_MadMoney\MadMoney\obj\Release\MadMoney.dll
+C:\Users\Sujan\Documents\Work\Service_MadMoney\MadMoney\obj\Release\MadMoney.pdb

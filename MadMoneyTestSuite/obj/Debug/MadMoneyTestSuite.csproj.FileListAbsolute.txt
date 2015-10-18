@@ -6,3 +6,11 @@ C:\Users\Sujan\Documents\Work\MadMoney\MadMoneyTestSuite\obj\Debug\MadMoneyTestS
 C:\Users\Sujan\Documents\Work\MadMoney\MadMoneyTestSuite\obj\Debug\MadMoneyTestSuite.dll
 C:\Users\Sujan\Documents\Work\MadMoney\MadMoneyTestSuite\obj\Debug\MadMoneyTestSuite.pdb
 C:\Users\Sujan\Documents\Work\MadMoney\MadMoneyTestSuite\bin\Debug\MadMoneyTestSuite.dll.config
+C:\Users\Sujan\Documents\Work\Service_MadMoney\MadMoneyTestSuite\bin\Debug\MadMoneyTestSuite.dll.config
+C:\Users\Sujan\Documents\Work\Service_MadMoney\MadMoneyTestSuite\bin\Debug\MadMoneyTestSuite.dll
+C:\Users\Sujan\Documents\Work\Service_MadMoney\MadMoneyTestSuite\bin\Debug\MadMoneyTestSuite.pdb
+C:\Users\Sujan\Documents\Work\Service_MadMoney\MadMoneyTestSuite\bin\Debug\MadMoney.dll
+C:\Users\Sujan\Documents\Work\Service_MadMoney\MadMoneyTestSuite\bin\Debug\MadMoney.pdb
+C:\Users\Sujan\Documents\Work\Service_MadMoney\MadMoneyTestSuite\obj\Debug\MadMoneyTestSuite.csprojResolveAssemblyReference.cache
+C:\Users\Sujan\Documents\Work\Service_MadMoney\MadMoneyTestSuite\obj\Debug\MadMoneyTestSuite.dll
+C:\Users\Sujan\Documents\Work\Service_MadMoney\MadMoneyTestSuite\obj\Debug\MadMoneyTestSuite.pdb

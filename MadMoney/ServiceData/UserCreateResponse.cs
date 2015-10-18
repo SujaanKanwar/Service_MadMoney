@@ -9,7 +9,7 @@ namespace MadMoney
     [DataContract]
     public class UserCreateResponse
     {
-        public UserCreateResponse(bool isSuccess, string failureDesc, string uid, APKStaticStore[] apkTree)
+        public UserCreateResponse(bool isSuccess, string failureDesc, string uid, List<APKNode> apkTree)
         {
             this.isSuccess = isSuccess;
             this.failureDesc = failureDesc;
@@ -27,6 +27,6 @@ namespace MadMoney
         public string uid { get; set; }
 
         [DataMember(Name="APKTreeArray")]
-        public APKStaticStore[] apkTree { get; set; }
+        public List<APKNode> apkTree { get; set; }
     }
 }

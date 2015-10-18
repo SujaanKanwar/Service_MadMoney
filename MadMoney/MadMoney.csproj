@@ -72,6 +72,7 @@
     <Compile Include="APK\APKTree.cs" />
     <Compile Include="Cashier\CashierService.cs" />
     <Compile Include="Cashier\Credential.cs" />
+    <Compile Include="DataBaseTools\APKDBTool.cs" />
     <Compile Include="DataBaseTools\CachierDBTool.cs" />
     <Compile Include="DataBaseTools\MoneyBankDBTool.cs" />
     <Compile Include="DataBaseTools\UsersDBTool.cs" />
