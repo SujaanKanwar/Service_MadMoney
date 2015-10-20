@@ -12,13 +12,13 @@ by editing this MSBuild file. In order to learn more about this please visit htt
   </PropertyGroup>
   <ItemGroup>
     <File Include="bin/MadMoney.dll">
-      <publishTime>10/17/2015 13:59:30</publishTime>
+      <publishTime>10/19/2015 15:25:46</publishTime>
     </File>
     <File Include="MadMoneyService.svc">
       <publishTime>09/15/2015 08:32:28</publishTime>
     </File>
     <File Include="Web.config">
-      <publishTime>10/17/2015 14:02:31</publishTime>
+      <publishTime>10/19/2015 15:25:46</publishTime>
     </File>
   </ItemGroup>
 </Project>

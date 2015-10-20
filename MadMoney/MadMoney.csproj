@@ -67,8 +67,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="APK\APKNode.cs" />
-    <Compile Include="APK\APKStaticStore.cs" />
-    <Compile Include="APK\APKStore.cs" />
     <Compile Include="APK\APKTree.cs" />
     <Compile Include="Cashier\CashierService.cs" />
     <Compile Include="Cashier\Credential.cs" />
@@ -76,7 +74,6 @@
     <Compile Include="DataBaseTools\CachierDBTool.cs" />
     <Compile Include="DataBaseTools\MoneyBankDBTool.cs" />
     <Compile Include="DataBaseTools\UsersDBTool.cs" />
-    <Compile Include="App_Data\FileOperation.cs" />
     <Compile Include="IMadMoneyService.cs" />
     <Compile Include="MadMoneyService.svc.cs">
       <DependentUpon>MadMoneyService.svc</DependentUpon>
@@ -84,11 +81,13 @@
     <Compile Include="MoneyBank\Money.cs" />
     <Compile Include="MoneyBank\MoneyBankService.cs" />
     <Compile Include="MoneyBank\MoneyGenerator.cs" />
+    <Compile Include="ServiceData\Constants.cs" />
     <Compile Include="ServiceData\Money.cs" />
     <Compile Include="ServiceData\MoneyFetchRequest.cs" />
     <Compile Include="ServiceData\MoneyFetchResponse.cs" />
     <Compile Include="MoneyForger\MoneyForgerService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ServiceData\PublicKey.cs" />
     <Compile Include="ServiceData\UserCreateRequest.cs" />
     <Compile Include="ServiceData\UserCreateResponse.cs" />
     <Compile Include="DataBaseTools\AdminUserDBTool.cs" />

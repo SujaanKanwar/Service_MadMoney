@@ -14,5 +14,8 @@ namespace MadMoney
 
         [DataMember(Name="UserAddressId")]
         public string userAddressId { get; set; }
+
+        [DataMember(Name = "RequestType")]
+        public string requestType { get; set; }
     }
 }

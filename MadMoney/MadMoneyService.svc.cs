@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
 using System.Security.Cryptography;
 using System.ServiceModel;
 using System.Text;
@@ -11,7 +13,6 @@ namespace MadMoney
 {
     public class MadMoneyService : IMadMoneyService
     {
-
         public UserCreateResponse CreateUser(UserCreateRequest userCreateRequest)
         {
             string userAddress = string.Empty; string failureDesc = string.Empty;
@@ -40,35 +41,54 @@ namespace MadMoney
             {
                 failureDesc = "Invalid request";
             }
-
             return new UserCreateResponse(isSuccess, failureDesc, userAddress, apkTreeStore);
         }
 
         public MoneyFetchResponse FetchMoney(MoneyFetchRequest moneyFetchRequest)
         {
             List<Money> moneyList = new List<Money>(); bool isSuccess = false;
-            string status = string.Empty; string encryptedOTP = string.Empty;
+            string status = string.Empty, encryptedOTP = string.Empty;
             try
             {
                 if (ValidateMoneyFetchRequest(moneyFetchRequest))
                 {
-                    if (string.IsNullOrEmpty(moneyFetchRequest.decryptdOTP))
+                    switch (moneyFetchRequest.requestType)
                     {
-                        encryptedOTP = GenerateEncryptedOTP(moneyFetchRequest);
-                        status = "OTP_SENT";
-                    }
-                    else
-                    {
-                        string storedOTP = GetStoredOTP(moneyFetchRequest.userAddressId);
+                        case Constants.FetchMoneyRequest.INIT:
 
-                        if (!string.IsNullOrEmpty(storedOTP) && moneyFetchRequest.decryptdOTP.CompareTo(storedOTP) == 0)
-                        {
-                            moneyList = GetAllMoneyFromAccount(moneyFetchRequest.userAddressId);
-                            status = "MONEY_SENT";
+                            if (IsMoneyInAccount(moneyFetchRequest.userAddressId))
+                            {
+                                encryptedOTP = GenerateEncryptedOTP(moneyFetchRequest);
+
+                                status = Constants.FetchMoneyResponse.OTP_SENT;
+                            }
+                            else
+                                status = Constants.FetchMoneyResponse.EMPTY_AC;
+
                             isSuccess = true;
-                        }
-                        else
-                            status = "OTP_MISSMATCHED";
+
+                            break;
+
+                        case Constants.FetchMoneyRequest.DECRYPTED_OTP:
+
+                            string storedOTP = GetStoredOTP(moneyFetchRequest.userAddressId);
+
+                            if (!string.IsNullOrEmpty(storedOTP) && moneyFetchRequest.decryptdOTP.CompareTo(storedOTP) == 0)
+                            {
+                                moneyList = GetAllMoneyFromAccount(moneyFetchRequest.userAddressId);
+
+                                status = Constants.FetchMoneyResponse.MONEY_SENT;
+                            }
+                            else
+                                status = Constants.FetchMoneyResponse.OTP_MISMATCHED;
+
+                            isSuccess = true;
+
+                            break;
+
+                        case Constants.FetchMoneyRequest.RECEIVED_OK:
+                            UpdateFetchedMoneyStatus(moneyFetchRequest.userAddressId);
+                            break;
                     }
                 }
             }
@@ -80,15 +100,37 @@ namespace MadMoney
             return new MoneyFetchResponse(isSuccess, status, moneyList, encryptedOTP);
         }
 
+
+
+
+
+
         #region private functions
 
         private UsersDBTool usersDBTool = new UsersDBTool();
 
-        private APKTree apkTree = new APKTree();
+        private CachierDBTool cachierDbTool = new CachierDBTool();
+
+        private APKTree apkTree = APKTree.APKTreeInstance();
+
+        private void UpdateFetchedMoneyStatus(string userAddressId)
+        {
+            string uid = usersDBTool.ValidateUsers(userAddressId);
+
+            cachierDbTool.UpdatedOwnerMoneyStatus(uid);
+        }
+
+        private bool IsMoneyInAccount(string userAddressId)
+        {
+            string uid = usersDBTool.ValidateUsers(userAddressId);
+
+            return cachierDbTool.GetMoneyCountFromUserAccount(userAddressId, uid) == 0 ? false : true;
+        }
 
         private string GenerateUserAddress(UserCreateRequest data, int userNo)
         {
             string uid = Guid.NewGuid().ToString();
+
             return data.Address.CountryCode + "/" + data.Address.State + "/" + data.Address.City + "/" + data.Address.Local + "/" + uid.Replace("-", "") + "-" + ++userNo;
         }
 
@@ -99,11 +141,8 @@ namespace MadMoney
             return true;
         }
 
-
         private List<Money> GetAllMoneyFromAccount(string userAddressId)
         {
-            CachierDBTool cachierDbTool = new CachierDBTool();
-
             string uid = usersDBTool.ValidateUsers(userAddressId);
 
             return cachierDbTool.GetMoneyFromUserAccount(userAddressId, uid);
@@ -118,7 +157,9 @@ namespace MadMoney
         {
             if (string.IsNullOrEmpty(moneyFetchRequest.userAddressId))
                 return false;
+
             usersDBTool.ValidateUsers(moneyFetchRequest.userAddressId);
+
             return true;
         }
 
@@ -129,52 +170,45 @@ namespace MadMoney
 
         private string GenerateEncryptedOTP(MoneyFetchRequest moneyFetchRequest)
         {
-            string OTP = Guid.NewGuid().ToString();
+            string OTP = Guid.NewGuid().ToString().Replace("-", "");
 
             string userPublicKey = apkTree.GetPublicKey(moneyFetchRequest.userAddressId);
 
             StoreTheOTPwrtAddressId(moneyFetchRequest.userAddressId, OTP);
 
-
-            return EncryptString(OTP, 1024, userPublicKey);
-
-            //RSACryptoServiceProvider RSA = new RSACryptoServiceProvider(1024);
-
-            //RSA.FromXmlString(userPublicKey);
-
-            //byte[] toEncryptData = Encoding.ASCII.GetBytes(OTP);
-
-            //byte[] encryptedData = RSA.Encrypt(toEncryptData, false);
-
-            //return Encoding.GetEncoding("ISO-8859-1").GetString(encryptedData);
+            return EncryptString(OTP, userPublicKey);
         }
 
-        private string EncryptString(string inputString, int dwKeySize, string xmlString)
+        private string EncryptString(string inputString, string jsonPublicKey)
         {
-            RSACryptoServiceProvider rsaCryptoServiceProvider = new RSACryptoServiceProvider(dwKeySize);
-            rsaCryptoServiceProvider.FromXmlString(xmlString);
-            int keySize = dwKeySize / 8;
-            byte[] bytes = Encoding.UTF32.GetBytes(inputString);
-            int maxLength = keySize - 42;
-            int dataLength = bytes.Length;
-            int iterations = dataLength / maxLength;
-            StringBuilder stringBuilder = new StringBuilder();
+            RSAParameters rsaParameter = new RSAParameters();
 
-            for (int i = 0; i <= iterations; i++)
-            {
-                byte[] tempBytes = new byte[(dataLength - maxLength * i > maxLength) ? 
-                    maxLength : dataLength - maxLength * i];
+            PublicKey publicKey = JsonDeserialize<PublicKey>(jsonPublicKey);
 
-                Buffer.BlockCopy(bytes, maxLength * i, tempBytes, 0, tempBytes.Length);
+            rsaParameter.Exponent = Convert.FromBase64String(publicKey.EXP);
 
-                byte[] encryptedBytes = rsaCryptoServiceProvider.Encrypt(tempBytes, true);
+            rsaParameter.Modulus = Convert.FromBase64String(publicKey.MOD);
 
-                Array.Reverse(encryptedBytes);
+            RSACryptoServiceProvider rsaCryptoServiceProvider = new RSACryptoServiceProvider();
 
-                stringBuilder.Append(Convert.ToBase64String(encryptedBytes));
-            }
+            rsaCryptoServiceProvider.ImportParameters(rsaParameter);
 
-            return stringBuilder.ToString();
+            byte[] bytes = Encoding.UTF8.GetBytes(inputString);
+
+            byte[] encryptedBytes = rsaCryptoServiceProvider.Encrypt(bytes, false);
+
+            return Convert.ToBase64String(encryptedBytes);
+        }
+
+        private T JsonDeserialize<T>(string jsonString)
+        {
+            DataContractJsonSerializer ser = new DataContractJsonSerializer(typeof(T));
+
+            MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(jsonString));
+
+            T obj = (T)ser.ReadObject(ms);
+
+            return obj;
         }
 
         #endregion

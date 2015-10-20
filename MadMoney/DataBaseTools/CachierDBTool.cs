@@ -28,45 +28,31 @@ namespace MadMoney
             UsersDBTool userDBTool = new UsersDBTool();
             int uid;
             int.TryParse(userDBTool.ValidateUsers(userAddressId), out uid);
-            StringBuilder sqlString = new StringBuilder();
-            sqlString.Append(@"INSERT INTO " + USER_AC_TABLE + " VALUES ");
 
-            int j=0;
-            foreach (var moneyList in moneyDictionary.Values)
-            {
-                for (var i=0;i< moneyList.Count;i++)
-                {
-                    string values = string.Format("('{0}', {1}, '{2}', '{3}', '{4}', {5}, {6}) ,", moneyList[i].id, moneyList[i].value, moneyList[i].hash, moneyList[i].ownerId, moneyList[i].dated,"@sign"+j++, uid);
-                    sqlString.Append(values);
-                }
-            }
-            string sql = sqlString.ToString().TrimEnd(',');
-
+            string spName = "sp_UsersAccounts_Insert";
             try
             {
-                CON = new SqlConnection(CONNECTION_STR);
-                SqlCommand cmd = new SqlCommand(sql, CON);
-                j=0;
+                SqlCommand cmd = new SqlCommand(spName, CON);
+                cmd.CommandType = CommandType.StoredProcedure;
+                CON.Open();
                 foreach (var moneyList in moneyDictionary.Values)
                 {
                     for (var i = 0; i < moneyList.Count; i++)
                     {
-                        cmd.Parameters.Add("@sign" + j++,SqlDbType.Binary).Value = moneyList[i].signature;
+                        cmd.Parameters.AddWithValue("@Id", moneyList[i].id);
+                        cmd.Parameters.AddWithValue("@Value", moneyList[i].value);
+                        cmd.Parameters.AddWithValue("@Hash", moneyList[i].hash);
+                        cmd.Parameters.AddWithValue("@OwnerId", moneyList[i].ownerId);
+                        cmd.Parameters.AddWithValue("@Dated", moneyList[i].dated);
+                        cmd.Parameters.Add("@Signature", SqlDbType.Binary).Value = moneyList[i].signature;
+                        cmd.Parameters.AddWithValue("@UserId", uid);
                     }
+                    cmd.ExecuteNonQuery();
                 }
 
-
-                CON.Open();
-                cmd.ExecuteNonQuery();
             }
-            catch (Exception e)
-            {
-                throw new Exception("Error while connecting database", e);
-            }
-            finally
-            {
-                if (CON != null) CON.Close();
-            }
+            catch (Exception e) { throw new Exception("Error while connecting database", e); }
+            finally { if (CON != null)CON.Close(); }
         }
 
         public List<ServiceData.Money> GetMoneyFromUserAccount(string userAddressId, string uid)
@@ -75,7 +61,7 @@ namespace MadMoney
             ServiceData.Money money;
             CON = new SqlConnection(CONNECTION_STR);
             SqlCommand cmd = new SqlCommand();
-            cmd.CommandText = "SELECT * FROM " + USER_AC_TABLE + " WHERE UserId = " + uid;
+            cmd.CommandText = "SELECT * FROM " + USER_AC_TABLE + " WHERE UserId = " + uid + " AND Status = " + 0;
             cmd.Connection = CON;
             CON.Open();
             try
@@ -85,7 +71,7 @@ namespace MadMoney
                     int value;
                     while (reader.Read())
                     {
-                        money = new ServiceData.Money();                        
+                        money = new ServiceData.Money();
                         money.id = reader["Id"].ToString();
                         int.TryParse(reader["Value"].ToString(), out value);
                         money.value = value;
@@ -100,6 +86,38 @@ namespace MadMoney
             catch (Exception e) { throw new Exception("DB Exception :" + e.InnerException); }
             finally { CON.Close(); }
             return moneyList;
+        }
+
+        public int GetMoneyCountFromUserAccount(string userAddressId, string uid)
+        {
+            int count;
+            try
+            {
+                SqlCommand cmd = new SqlCommand();
+                cmd.CommandText = "SELECT COUNT(*) " + USER_AC_TABLE + " WHERE UserId = " + uid + " AND Status = " + 0;
+                cmd.Connection = CON;
+                CON.Open();
+                count = (int)cmd.ExecuteScalar();
+            }
+            catch (Exception e) { throw new Exception("Error while connecting database", e); }
+            finally { if (CON != null)CON.Close(); }
+
+            return count;
+        }
+
+        public void UpdatedOwnerMoneyStatus(string uid)
+        {
+            string spName = "sp_UsersAccounts_Update_Status";
+            try
+            {
+                SqlCommand cmd = new SqlCommand(spName, CON);
+                cmd.CommandType = CommandType.StoredProcedure;
+                CON.Open();
+                cmd.Parameters.AddWithValue("@UserId", uid);
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception e) { throw new Exception("Error while connecting database", e); }
+            finally { if (CON != null)CON.Close(); }
         }
     }
 }
