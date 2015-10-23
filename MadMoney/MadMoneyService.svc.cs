@@ -7,6 +7,8 @@ using System.Runtime.Serialization.Json;
 using System.Security.Cryptography;
 using System.ServiceModel;
 using System.Text;
+using MadMoney.Cashier;
+using MadMoney.DataBaseTools;
 using MadMoney.ServiceData;
 
 namespace MadMoney
@@ -100,11 +102,219 @@ namespace MadMoney
             return new MoneyFetchResponse(isSuccess, status, moneyList, encryptedOTP);
         }
 
+        public APKFileResponse GetAPKFile()
+        {
+            return new APKFileResponse(true, apkTree.GetAPKTree());
+        }
 
+        public bool RegenerateSmallerMoney(RegenerateSmallerMoneyRequest request)
+        {
+            if (IsValidRequest(request))
+            {
+                try
+                {
+                    using (var scope = new System.Transactions.TransactionScope())
+                    {
+                        VerifyMoney(request.money);
 
+                        CheckOldMoneyStore(request.money);
 
+                        StoreMoneyInOldMoneyStore(request.money);
 
+                        CashierServiceWrapper.DepositSmallerMoney(request.userAddressId, request.money.value);
 
+                        scope.Complete();
+                    }
+                }
+                catch (Exception e)
+                {
+                    //Important log.. Need to log the cause of the failure
+                    return false;
+                }
+                return true;
+            }
+            return false;
+        }
+
+        public bool DepositMoneyToAccount(DepositMoneyToAcountRQ request)
+        {
+            if (IsValidRequest(request))
+            {
+                try
+                {
+                    if (IsValidMoneyList(request.moneyList))
+                    {
+                        using (var scope = new System.Transactions.TransactionScope())
+                        {
+                            foreach (var money in request.moneyList)
+                            {
+                                StoreMoneyInOldMoneyStore(money);
+
+                                CashierServiceWrapper.DepositSameAmount(request.userAddressId, money.value);
+                            }
+
+                            scope.Complete();
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    //Important log.. Need to log the cause of the failure
+                    return false;
+                }
+                return true;
+            }
+            return false;
+        }
+
+        public bool DepositMoneyToBankAccount(DepositMoneyToBankAcountRQ request)
+        {
+            if (IsValidRequest(request))
+            {
+                try
+                {
+                    if (IsValidMoneyList(request.moneyList) && IsNotTravelMoney(request))
+                    {
+                        using (var scope = new System.Transactions.TransactionScope())
+                        {
+                            foreach (var money in request.moneyList)
+                            {
+                                StoreMoneyInOldMoneyStore(money);
+
+                                StoreDepositRequest(request);
+                            }
+
+                            scope.Complete();
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    //Important log.. Need to log the cause of the failure
+                    return false;
+                }
+                return true;
+            }
+            return false;
+        }
+
+        #region RegenerateSmallerMoney
+
+        private bool IsNotTravelMoney(DepositMoneyToBankAcountRQ request)
+        {
+            foreach (var money in request.moneyList)
+            {
+                if (string.Compare(money.ownerId, request.userAddressId, true) != 0)
+                    return false;
+            }
+            return true;
+        }
+
+        private bool IsValidMoneyList(List<Money> moneyList)
+        {
+            foreach (var money in moneyList)
+            {
+                VerifyMoney(money);
+
+                CheckOldMoneyStore(money);
+            }
+            return true;
+        }
+
+        private bool IsValidRequest(DepositMoneyToAcountRQ request)
+        {
+            if (request.moneyList == null
+                || string.IsNullOrEmpty(request.userAddressId)
+                || string.IsNullOrEmpty(usersDBTool.ValidateUsers(request.userAddressId)))
+                return false;
+            return true;
+        }
+
+        private bool IsValidRequest(DepositMoneyToBankAcountRQ request)
+        {
+            if (request.moneyList == null
+                || string.IsNullOrEmpty(request.userAddressId)
+                || string.IsNullOrEmpty(usersDBTool.ValidateUsers(request.userAddressId)))
+                return false;
+            return true;
+        }
+
+        private bool IsValidRequest(RegenerateSmallerMoneyRequest request)
+        {
+            if (request.money.value < 5
+                || string.IsNullOrEmpty(request.userAddressId)
+                || string.IsNullOrEmpty(usersDBTool.ValidateUsers(request.userAddressId)))
+                return false;
+            return true;
+        }
+
+        private void StoreMoneyInOldMoneyStore(Money money)
+        {
+            OldMoneyDBTool oldMoneyTool = new OldMoneyDBTool();
+            oldMoneyTool.Store(money);
+        }
+
+        private void CheckOldMoneyStore(Money money)
+        {
+            OldMoneyDBTool oldMoneyTool = new OldMoneyDBTool();
+            if (oldMoneyTool.CheckPreviousMoneyEntry(money))
+                throw new Exception("WARNING: Money already in old db store");
+        }
+
+        private void VerifyMoney(Money money)
+        {
+            try
+            {
+                string hash = GenerateHash(money);
+                RSACryptoServiceProvider RSA = new RSACryptoServiceProvider();
+                RSA.FromXmlString(File.ReadAllText(@"D:\CashierKeys\public.xml"));
+                bool verify = RSA.VerifyData(Encoding.ASCII.GetBytes(money.hash), new SHA1Managed(), Convert.FromBase64String(money.signature));
+                if (verify != true)
+                {
+                    throw new Exception("Exception while Verify money");
+                }
+            }
+            catch (Exception e)
+            {
+                throw new Exception("Exception while Verify money", e);
+            }
+        }
+
+        private string GenerateHash(Money money)
+        {
+            string toHash = money.id + money.value + money.ownerId + money.dated;
+
+            byte[] bytes = Encoding.Unicode.GetBytes(toHash);
+            SHA256Managed sha = new SHA256Managed();
+            byte[] hash = sha.ComputeHash(bytes);
+            string hashString = string.Empty;
+            foreach (byte x in hash)
+            {
+                hashString += String.Format("{0:x2}", x);
+            }
+            return hashString;
+        }
+
+        private void StoreDepositRequest(DepositMoneyToBankAcountRQ request)
+        {
+            int totalAmount = CalculateTotalAmount(request.moneyList);
+
+            ReportsDBTool reportsDbTool = new ReportsDBTool();
+
+            reportsDbTool.Store(request, totalAmount);
+        }
+
+        private int CalculateTotalAmount(List<Money> moneyList)
+        {
+            int totalAmount = 0;
+            foreach (var money in moneyList)
+            {
+                totalAmount += money.value;
+            }
+            return totalAmount;
+        }
+        #endregion
+        
         #region private functions
 
         private UsersDBTool usersDBTool = new UsersDBTool();
@@ -212,5 +422,6 @@ namespace MadMoney
         }
 
         #endregion
+
     }
 }

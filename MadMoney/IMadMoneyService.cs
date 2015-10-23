@@ -28,5 +28,13 @@ namespace MadMoney
             UriTemplate = "FetchMoney")]
 
         MoneyFetchResponse FetchMoney(MoneyFetchRequest data);
+
+        [OperationContract]
+        [WebInvoke(Method = "GET",
+            ResponseFormat = WebMessageFormat.Json,
+            BodyStyle = WebMessageBodyStyle.WrappedRequest,
+            UriTemplate = "APKFile")]
+
+        APKFileResponse GetAPKFile();
     }
 }

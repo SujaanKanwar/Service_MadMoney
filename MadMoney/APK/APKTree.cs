@@ -28,6 +28,11 @@ namespace MadMoney
                 apkList = apkdbTool.Retrive();
         }
 
+        public List<APKNode> GetAPKTree()
+        {
+            return apkList;
+        }
+
         public List<APKNode> InserUser(string address, string userPublicKey)
         {
             string[] addressArray = address.Split('/');

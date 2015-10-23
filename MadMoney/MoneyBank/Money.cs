@@ -17,6 +17,7 @@ namespace MadMoney.MoneyBank
         public string dated { get; private set; }
         public byte[] signature { get; private set; }
 
+        //While money retrieval from money bank
         public Money(string id, int value)
         {
             this.id = id;

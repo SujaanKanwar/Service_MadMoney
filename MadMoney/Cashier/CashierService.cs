@@ -7,9 +7,10 @@ using MadMoney.AdminUserData;
 namespace MadMoney.Cashier
 {
     public class CashierService
-    {      
+    {
 
-        public bool DepositeMoney(string userAddressId, int[] amount, int totalAmount, Credential credential) {
+        public bool DepositeMoney(string userAddressId, int[] amount, int totalAmount, Credential credential)
+        {
             if (ValidateDepositRequest(userAddressId, amount, totalAmount, credential))
             {
                 try
@@ -21,17 +22,17 @@ namespace MadMoney.Cashier
                     forgeService.ForgeMoney(moneyDictionary, userAddressId);
 
                     CachierDBTool cDBTool = new CachierDBTool();
-                    cDBTool.DepositMoneyInUserAC(moneyDictionary,userAddressId);
+                    cDBTool.DepositMoneyInUserAC(moneyDictionary, userAddressId);
                     return true;
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    //log the exception
-                    return false;
+                    throw new Exception(e.Message, e);
                 }
             }
-            else {
-                return false;
+            else
+            {
+                throw new Exception("Invalid deposit money request");
             }
         }
 
@@ -43,7 +44,7 @@ namespace MadMoney.Cashier
             {
                 ValidateCredentials(credential);
                 ValidateUserAddressId(userAddressId);
-                validateAmount(amount , totalAmount);
+                validateAmount(amount, totalAmount);
             }
             catch (Exception e)
             {

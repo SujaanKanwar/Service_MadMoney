@@ -21,6 +21,7 @@ namespace MadMoney
         public CachierDBTool()
         {
             CONNECTION_STR = ConfigurationManager.ConnectionStrings[DB_CON_NAME].ToString();
+            CON = new SqlConnection(CONNECTION_STR);
         }
 
         public void DepositMoneyInUserAC(Dictionary<int, List<Money>> moneyDictionary, string userAddressId)
@@ -31,14 +32,15 @@ namespace MadMoney
 
             string spName = "sp_UsersAccounts_Insert";
             try
-            {
-                SqlCommand cmd = new SqlCommand(spName, CON);
-                cmd.CommandType = CommandType.StoredProcedure;
+            {                                
+                SqlCommand cmd;                
                 CON.Open();
                 foreach (var moneyList in moneyDictionary.Values)
-                {
+                {                    
                     for (var i = 0; i < moneyList.Count; i++)
                     {
+                        cmd = new SqlCommand(spName, CON);
+                        cmd.CommandType = CommandType.StoredProcedure;
                         cmd.Parameters.AddWithValue("@Id", moneyList[i].id);
                         cmd.Parameters.AddWithValue("@Value", moneyList[i].value);
                         cmd.Parameters.AddWithValue("@Hash", moneyList[i].hash);
@@ -46,8 +48,8 @@ namespace MadMoney
                         cmd.Parameters.AddWithValue("@Dated", moneyList[i].dated);
                         cmd.Parameters.Add("@Signature", SqlDbType.Binary).Value = moneyList[i].signature;
                         cmd.Parameters.AddWithValue("@UserId", uid);
-                    }
-                    cmd.ExecuteNonQuery();
+                        cmd.ExecuteNonQuery();                        
+                    }                    
                 }
 
             }
@@ -94,7 +96,7 @@ namespace MadMoney
             try
             {
                 SqlCommand cmd = new SqlCommand();
-                cmd.CommandText = "SELECT COUNT(*) " + USER_AC_TABLE + " WHERE UserId = " + uid + " AND Status = " + 0;
+                cmd.CommandText = "SELECT COUNT(*) FROM " + USER_AC_TABLE + " WHERE UserId = " + uid + " AND Status = " + 0;
                 cmd.Connection = CON;
                 CON.Open();
                 count = (int)cmd.ExecuteScalar();
