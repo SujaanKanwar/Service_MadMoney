@@ -15,7 +15,7 @@ namespace MadMoneyTestSuite
         [TestMethod]
         public void GenerateMoneyTest()
         {
-           var returnValue=  MoneyGenerator.GenerateMoney(MoneyGenerator.Consignment.ES); 
+           var returnValue=  MoneyGenerator.GenerateMoney(MoneyGenerator.Consignment.EL); 
         }
 
         [TestMethod]

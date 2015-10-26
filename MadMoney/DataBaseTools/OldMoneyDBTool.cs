@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
@@ -12,7 +13,13 @@ namespace MadMoney.DataBaseTools
     {
          private static string DB_CON_NAME = "MadMoneyUser";
         SqlConnection CON = null;
-        private string APKSTORE_TABLE_NAME = "OldMoney";        
+        private string APKSTORE_TABLE_NAME = "OldMoney";
+
+        public OldMoneyDBTool()
+        {
+            string CONNECTION_STR = ConfigurationManager.ConnectionStrings[DB_CON_NAME].ToString();
+            CON = new SqlConnection(CONNECTION_STR);
+        }
 
         public void Store(Money money)
         {
@@ -39,7 +46,7 @@ namespace MadMoney.DataBaseTools
             bool result = false;
             SqlCommand cmd = new SqlCommand();
 
-            cmd.CommandText = "SELECT 1 FROM " + APKSTORE_TABLE_NAME + "WHERE [Id] = " + money.id;
+            cmd.CommandText = "SELECT 1 FROM " + APKSTORE_TABLE_NAME + " WHERE [Id] = '" + money.id +"'";
             cmd.Connection = CON;
             CON.Open();
 

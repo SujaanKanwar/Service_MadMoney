@@ -117,14 +117,17 @@ namespace MadMoney
             SqlConnection CON = new SqlConnection(CONNECTION_STR);
             SqlCommand cmd = new SqlCommand();
 
-            string ids = GetIds(list);
-            cmd.CommandText = "DELETE FROM " + MONEY_TABLE_NAME_ARRAY[moneyTableIndex] + " WHERE [Id] in (" + ids + ")";
+            string ids = GetIds(list);            
             cmd.Connection = CON;
 
             try
             {
                 CON.Open();
-                cmd.ExecuteNonQuery();
+                for (var i = 0; i < list.Count; i++)
+                {
+                    cmd.CommandText = "DELETE FROM " + MONEY_TABLE_NAME_ARRAY[moneyTableIndex] + " WHERE [Id] = '" + list[i] +"'";
+                    cmd.ExecuteNonQuery();
+                }                                
             }
             catch (Exception e) { throw new Exception("Exception while Deleting money from table " + MONEY_TABLE_NAME_ARRAY[moneyTableIndex] + ": " + e.InnerException); }
             finally { CON.Close(); }

@@ -268,7 +268,7 @@ namespace MadMoney
                 string hash = GenerateHash(money);
                 RSACryptoServiceProvider RSA = new RSACryptoServiceProvider();
                 RSA.FromXmlString(File.ReadAllText(@"D:\CashierKeys\public.xml"));
-                bool verify = RSA.VerifyData(Encoding.ASCII.GetBytes(money.hash), new SHA1Managed(), Convert.FromBase64String(money.signature));
+                bool verify = RSA.VerifyData(Encoding.ASCII.GetBytes(hash), new SHA1Managed(), Convert.FromBase64String(money.signature));
                 if (verify != true)
                 {
                     throw new Exception("Exception while Verify money");

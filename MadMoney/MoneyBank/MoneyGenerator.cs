@@ -7,7 +7,7 @@ namespace MadMoney.MoneyBank
 {
     public class MoneyGenerator
     {
-        private static int[] MoneyMultiplier = new int[] { 100, 100, 20, 20, 10, 2, 1, 0, 0 };
+        private static int[] MoneyMultiplier = new int[] { 100, 100, 20, 20, 10, 2, 1, 1, 1 };
         public static int[] MoneySequence = new int[] { 1, 2, 5, 10, 20, 50, 100, 500, 1000 };
 
         public enum Consignment

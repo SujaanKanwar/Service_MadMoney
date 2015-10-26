@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
@@ -13,6 +14,12 @@ namespace MadMoney.DataBaseTools
         private static string DB_CON_NAME = "MadMoneyReport";
         SqlConnection CON = null;
         private string APKSTORE_TABLE_NAME = "RefundRequest";
+
+        public ReportsDBTool()
+        {
+            string CONNECTION_STR = ConfigurationManager.ConnectionStrings[DB_CON_NAME].ToString();
+            CON = new SqlConnection(CONNECTION_STR);
+        }
 
         public void Store(DepositMoneyToBankAcountRQ request, int totalAmount)
         {

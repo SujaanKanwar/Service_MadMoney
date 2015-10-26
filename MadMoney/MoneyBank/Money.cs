@@ -37,8 +37,8 @@ namespace MadMoney.MoneyBank
 
         public void Initialize(string ownerId, string cashierPrivateKeyXmlFile) {
             SetDate();
-            SetHash();
             SetOwner(ownerId);
+            SetHash();            
             SignMoney(cashierPrivateKeyXmlFile);
         }
 
