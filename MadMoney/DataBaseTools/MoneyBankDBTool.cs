@@ -123,9 +123,11 @@ namespace MadMoney
             try
             {
                 CON.Open();
+                SqlConnection.ClearPool(CON);                                
                 for (var i = 0; i < list.Count; i++)
                 {
-                    cmd.CommandText = "DELETE FROM " + MONEY_TABLE_NAME_ARRAY[moneyTableIndex] + " WHERE [Id] = '" + list[i] +"'";
+                    cmd.CommandTimeout = 30;
+                    cmd.CommandText = "DELETE FROM " + MONEY_TABLE_NAME_ARRAY[moneyTableIndex] + " WHERE [Id] = '" + list[i].id + "'";
                     cmd.ExecuteNonQuery();
                 }                                
             }

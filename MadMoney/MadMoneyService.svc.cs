@@ -144,8 +144,8 @@ namespace MadMoney
                 {
                     if (IsValidMoneyList(request.moneyList))
                     {
-                        using (var scope = new System.Transactions.TransactionScope())
-                        {
+                        //using (var scope = new System.Transactions.TransactionScope())
+                        //{
                             foreach (var money in request.moneyList)
                             {
                                 StoreMoneyInOldMoneyStore(money);
@@ -153,8 +153,8 @@ namespace MadMoney
                                 CashierServiceWrapper.DepositSameAmount(request.userAddressId, money.value);
                             }
 
-                            scope.Complete();
-                        }
+                        //    scope.Complete();
+                        //}
                     }
                 }
                 catch (Exception e)

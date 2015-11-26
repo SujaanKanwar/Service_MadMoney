@@ -5,6 +5,7 @@ using System.Runtime.Serialization;
 using System.ServiceModel;
 using System.ServiceModel.Web;
 using System.Text;
+using MadMoney.ServiceData;
 
 namespace MadMoney
 {
@@ -36,5 +37,32 @@ namespace MadMoney
             UriTemplate = "APKFile")]
 
         APKFileResponse GetAPKFile();
+
+        [OperationContract]
+        [WebInvoke(Method = "POST",
+            ResponseFormat = WebMessageFormat.Json,
+            RequestFormat = WebMessageFormat.Json,
+            BodyStyle = WebMessageBodyStyle.WrappedRequest,
+            UriTemplate = "RegenerateSmallerMoney")]
+
+        bool RegenerateSmallerMoney(RegenerateSmallerMoneyRequest data);
+
+        [OperationContract]
+        [WebInvoke(Method = "POST",
+            ResponseFormat = WebMessageFormat.Json,
+            RequestFormat = WebMessageFormat.Json,
+            BodyStyle = WebMessageBodyStyle.WrappedRequest,
+            UriTemplate = "DepositMoneyToAccount")]
+
+        bool DepositMoneyToAccount(DepositMoneyToAcountRQ data);
+
+        [OperationContract]
+        [WebInvoke(Method = "POST",
+            ResponseFormat = WebMessageFormat.Json,
+            RequestFormat = WebMessageFormat.Json,
+            BodyStyle = WebMessageBodyStyle.WrappedRequest,
+            UriTemplate = "DepositMoneyToBankAccount")]
+
+        bool DepositMoneyToBankAccount(DepositMoneyToBankAcountRQ data);
     }
 }

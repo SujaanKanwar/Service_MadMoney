@@ -9,10 +9,10 @@ namespace MadMoney.ServiceData
     [DataContract]
     public class DepositMoneyToAcountRQ
     {
-        [DataMember]
+        [DataMember(Name = "UserAddressId")]        
         public string userAddressId { get; set; }
 
-        [DataMember]
+        [DataMember(Name = "MoneyList")]        
         public List<Money> moneyList { get; set; }
     }
 }
