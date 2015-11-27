@@ -5,6 +5,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using System.Transactions;
 using MadMoney.Cashier;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -23,7 +24,7 @@ namespace MadMoneyTestSuite
             credential.key = "kanwar";
             CashierService cashierService = new CashierService();
             bool result;
-            using (var scope = new System.Transactions.TransactionScope())
+            using (var scope = new System.Transactions.TransactionScope(TransactionScopeOption.RequiresNew, new TransactionOptions() { IsolationLevel = System.Transactions.IsolationLevel.ReadUncommitted }))
             {
                 result = cashierService.DepositeMoney(userAddress, amount, 688, credential);
             }

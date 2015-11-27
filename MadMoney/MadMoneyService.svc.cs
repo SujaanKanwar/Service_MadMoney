@@ -7,6 +7,7 @@ using System.Runtime.Serialization.Json;
 using System.Security.Cryptography;
 using System.ServiceModel;
 using System.Text;
+using System.Transactions;
 using MadMoney.Cashier;
 using MadMoney.DataBaseTools;
 using MadMoney.ServiceData;
@@ -144,8 +145,8 @@ namespace MadMoney
                 {
                     if (IsValidMoneyList(request.moneyList))
                     {
-                        //using (var scope = new System.Transactions.TransactionScope())
-                        //{
+                        using (var scope = new System.Transactions.TransactionScope(TransactionScopeOption.Suppress, new TransactionOptions() { IsolationLevel = System.Transactions.IsolationLevel.ReadUncommitted }))
+                        {
                             foreach (var money in request.moneyList)
                             {
                                 StoreMoneyInOldMoneyStore(money);
@@ -153,8 +154,8 @@ namespace MadMoney
                                 CashierServiceWrapper.DepositSameAmount(request.userAddressId, money.value);
                             }
 
-                        //    scope.Complete();
-                        //}
+                            scope.Complete();
+                        }
                     }
                 }
                 catch (Exception e)

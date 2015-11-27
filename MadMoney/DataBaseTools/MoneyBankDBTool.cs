@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
@@ -118,18 +119,25 @@ namespace MadMoney
             SqlCommand cmd = new SqlCommand();
 
             string ids = GetIds(list);            
-            cmd.Connection = CON;
+            
 
             try
             {
-                CON.Open();
-                SqlConnection.ClearPool(CON);                                
-                for (var i = 0; i < list.Count; i++)
+                using (CON = new SqlConnection(CONNECTION_STR))
                 {
-                    cmd.CommandTimeout = 30;
-                    cmd.CommandText = "DELETE FROM " + MONEY_TABLE_NAME_ARRAY[moneyTableIndex] + " WHERE [Id] = '" + list[i].id + "'";
-                    cmd.ExecuteNonQuery();
-                }                                
+                    CON.Open();
+                    using (IDbTransaction tran = CON.BeginTransaction())
+                    {
+                        cmd.Connection = CON;
+                        cmd.Transaction = tran as SqlTransaction;
+                        for (var i = 0; i < list.Count; i++)
+                        {
+                            cmd.CommandText = "DELETE FROM " + MONEY_TABLE_NAME_ARRAY[moneyTableIndex] + " WHERE [Id] = '" + list[i].id + "'";
+                            cmd.ExecuteNonQuery();
+                        }
+                        tran.Commit();
+                    }
+                }
             }
             catch (Exception e) { throw new Exception("Exception while Deleting money from table " + MONEY_TABLE_NAME_ARRAY[moneyTableIndex] + ": " + e.InnerException); }
             finally { CON.Close(); }
