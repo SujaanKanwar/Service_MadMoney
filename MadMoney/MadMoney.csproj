@@ -78,6 +78,9 @@
     <Compile Include="DataBaseTools\OldMoneyDBTool.cs" />
     <Compile Include="DataBaseTools\ReportsDBTool.cs" />
     <Compile Include="DataBaseTools\UsersDBTool.cs" />
+    <Compile Include="ServiceData\GetTlocationsRQ.cs" />
+    <Compile Include="ServiceData\GetTLocationsRS.cs" />
+    <Compile Include="ServiceData\SaveTeleportLocationRQ.cs" />
     <Compile Include="ServiceData\DepositMoneyToBankAcountRQ.cs" />
     <Compile Include="IMadMoneyService.cs" />
     <Compile Include="MadMoneyService.svc.cs">
@@ -99,6 +102,7 @@
     <Compile Include="ServiceData\UserCreateRequest.cs" />
     <Compile Include="ServiceData\UserCreateResponse.cs" />
     <Compile Include="DataBaseTools\AdminUserDBTool.cs" />
+    <Compile Include="DataBaseTools\TelePortingLocationDb.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

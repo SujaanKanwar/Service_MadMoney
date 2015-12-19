@@ -64,5 +64,23 @@ namespace MadMoney
             UriTemplate = "DepositMoneyToBankAccount")]
 
         bool DepositMoneyToBankAccount(DepositMoneyToBankAcountRQ data);
+
+        [OperationContract]
+        [WebInvoke(Method = "POST",
+            ResponseFormat = WebMessageFormat.Json,
+            RequestFormat = WebMessageFormat.Json,
+            BodyStyle = WebMessageBodyStyle.WrappedRequest,
+            UriTemplate = "SaveTeleportLocation")]
+
+        bool SaveTeleportLocation(SaveTeleportLocationRQ data);
+
+        [OperationContract]
+        [WebInvoke(Method = "POST",
+            ResponseFormat = WebMessageFormat.Json,
+            RequestFormat = WebMessageFormat.Json,
+            BodyStyle = WebMessageBodyStyle.WrappedRequest,
+            UriTemplate = "GetTLocations")]
+
+        GetTLocationsRS GetTLocations(GetTlocationsRQ data);
     }
 }

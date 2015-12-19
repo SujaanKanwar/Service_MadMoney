@@ -18,17 +18,14 @@ namespace MadMoneyTestSuite
         public void DepositeMoneyTests()
         {
             int[] amount = new int[] { 1, 1, 1, 1, 1, 1, 1, 1, 0 };
-            string userAddress = "INDIA/MH/PUNE/kharadi/686e9a3ca6284387a51e939378fc6cb4-11";//"INDIA/MH/PUNE/Kharadi/0c7cc9dbe1fc4e54a4378a4e314c0958-10";
+            string userAddress = "INDIA/MH/PUNE/Kharadi/ec038f028f9a4f66868a12d655853e3e-18";//"INDIA/MH/PUNE/Kharadi/0c7cc9dbe1fc4e54a4378a4e314c0958-10";
             Credential credential = new Credential();
             credential.name = "sujaan";
             credential.key = "kanwar";
             CashierService cashierService = new CashierService();
             bool result;
-            using (var scope = new System.Transactions.TransactionScope(TransactionScopeOption.RequiresNew, new TransactionOptions() { IsolationLevel = System.Transactions.IsolationLevel.ReadUncommitted }))
-            {
-                result = cashierService.DepositeMoney(userAddress, amount, 688, credential);
-            }
+            result = cashierService.DepositeMoney(userAddress, amount, 688, credential);
             Assert.IsTrue(result);
-        }        
+        }
     }
 }

@@ -199,6 +199,63 @@ namespace MadMoney
             return false;
         }
 
+        public bool SaveTeleportLocation(SaveTeleportLocationRQ request)
+        {
+            if (IsValidRequest(request))
+            {
+                try
+                {
+                    if (IsValidLocationsData(request.TLocations))
+                    {
+                        using (var scope = new System.Transactions.TransactionScope())
+                        {
+                            SaveTeleportingLocations(request.TLocations);
+
+                            scope.Complete();
+                        }
+                        return true;
+                    }
+                }
+                catch (Exception)
+                { return false; }
+            }
+            return false;
+        }
+
+        public GetTLocationsRS GetTLocations(GetTlocationsRQ request)
+        {
+            bool isSuccess = false;
+            List<Position> positions = null;
+
+            if (IsValidRequest(request))
+            {
+                try
+                {
+                    positions = GetTLocationsFromDB(request.currentLocation);
+                    isSuccess = true;
+                }
+                catch (Exception e)
+                {
+
+                }
+            }
+            return new GetTLocationsRS(positions, isSuccess);
+        }
+
+        private List<Position> GetTLocationsFromDB(string city)
+        {
+            TelePortingLocationDb tLocationDb = new TelePortingLocationDb();
+            return tLocationDb.getTLocations(city);
+        }
+
+        private bool IsValidRequest(GetTlocationsRQ request)
+        {
+            if (string.IsNullOrEmpty(request.currentLocation))
+                return false;
+            return true;
+        }
+
+
         #region RegenerateSmallerMoney
 
         private bool IsNotTravelMoney(DepositMoneyToBankAcountRQ request)
@@ -247,6 +304,13 @@ namespace MadMoney
                 || string.IsNullOrEmpty(usersDBTool.ValidateUsers(request.userAddressId)))
                 return false;
             return true;
+        }
+
+        private bool IsValidRequest(SaveTeleportLocationRQ request)
+        {
+            if (request.TLocations != null)
+                return true;
+            return false;
         }
 
         private void StoreMoneyInOldMoneyStore(Money money)
@@ -315,7 +379,7 @@ namespace MadMoney
             return totalAmount;
         }
         #endregion
-        
+
         #region private functions
 
         private UsersDBTool usersDBTool = new UsersDBTool();
@@ -422,7 +486,33 @@ namespace MadMoney
             return obj;
         }
 
-        #endregion
+        private bool IsValidLocationsData(Location[] tLocationArray)
+        {
+            foreach (var location in tLocationArray)
+            {
+                float latitude, longitude;
+                int radius, rating;
+                string tLocationName;
+                float.TryParse(location.latitude, out latitude);
+                float.TryParse(location.longitude, out longitude);
+                int.TryParse(location.radius, out radius);
+                rating = location.rating;
+                tLocationName = location.locationName;
 
+                if (latitude == null || longitude == null || radius == null || rating < 0
+                    || rating > 10 || string.IsNullOrEmpty(tLocationName)
+                    || string.IsNullOrEmpty(location.city))
+                    return false;
+            }
+            return true;
+        }
+
+        private void SaveTeleportingLocations(Location[] locations)
+        {
+            TelePortingLocationDb tpLocationDb = new TelePortingLocationDb();
+            tpLocationDb.saveLocations(locations);
+        }
+
+        #endregion
     }
 }
