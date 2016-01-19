@@ -74,10 +74,13 @@
     <Compile Include="Cashier\Credential.cs" />
     <Compile Include="DataBaseTools\APKDBTool.cs" />
     <Compile Include="DataBaseTools\CachierDBTool.cs" />
+    <Compile Include="DataBaseTools\DiscoveredLocationsDBTool.cs" />
     <Compile Include="DataBaseTools\MoneyBankDBTool.cs" />
     <Compile Include="DataBaseTools\OldMoneyDBTool.cs" />
     <Compile Include="DataBaseTools\ReportsDBTool.cs" />
     <Compile Include="DataBaseTools\UsersDBTool.cs" />
+    <Compile Include="DataClasses\UserGeoDiscoveredLocation.cs" />
+    <Compile Include="ServiceData\DiscoveredLocationsRQ.cs" />
     <Compile Include="ServiceData\GetTlocationsRQ.cs" />
     <Compile Include="ServiceData\GetTLocationsRS.cs" />
     <Compile Include="ServiceData\SaveTeleportLocationRQ.cs" />

@@ -10,6 +10,7 @@ using System.Text;
 using System.Transactions;
 using MadMoney.Cashier;
 using MadMoney.DataBaseTools;
+using MadMoney.DataClasses;
 using MadMoney.ServiceData;
 
 namespace MadMoney
@@ -127,7 +128,7 @@ namespace MadMoney
                         scope.Complete();
                     }
                 }
-                catch (Exception e)
+                catch (Exception )
                 {
                     //Important log.. Need to log the cause of the failure
                     return false;
@@ -158,7 +159,7 @@ namespace MadMoney
                         }
                     }
                 }
-                catch (Exception e)
+                catch (Exception )
                 {
                     //Important log.. Need to log the cause of the failure
                     return false;
@@ -189,7 +190,7 @@ namespace MadMoney
                         }
                     }
                 }
-                catch (Exception e)
+                catch (Exception )
                 {
                     //Important log.. Need to log the cause of the failure
                     return false;
@@ -225,7 +226,7 @@ namespace MadMoney
         public GetTLocationsRS GetTLocations(GetTlocationsRQ request)
         {
             bool isSuccess = false;
-            List<Position> positions = null;
+            List<GeofenceLocation> positions = null;
 
             if (IsValidRequest(request))
             {
@@ -234,7 +235,7 @@ namespace MadMoney
                     positions = GetTLocationsFromDB(request.currentLocation);
                     isSuccess = true;
                 }
-                catch (Exception e)
+                catch (Exception )
                 {
 
                 }
@@ -242,7 +243,7 @@ namespace MadMoney
             return new GetTLocationsRS(positions, isSuccess);
         }
 
-        private List<Position> GetTLocationsFromDB(string city)
+        private List<GeofenceLocation> GetTLocationsFromDB(string city)
         {
             TelePortingLocationDb tLocationDb = new TelePortingLocationDb();
             return tLocationDb.getTLocations(city);
@@ -330,7 +331,7 @@ namespace MadMoney
         {
             try
             {
-                string hash = GenerateHash(money);
+                string hash = GenerateHash(money.id + money.value + money.ownerId + money.dated);
                 RSACryptoServiceProvider RSA = new RSACryptoServiceProvider();
                 RSA.FromXmlString(File.ReadAllText(@"D:\CashierKeys\public.xml"));
                 bool verify = RSA.VerifyData(Encoding.ASCII.GetBytes(hash), new SHA1Managed(), Convert.FromBase64String(money.signature));
@@ -345,10 +346,8 @@ namespace MadMoney
             }
         }
 
-        private string GenerateHash(Money money)
+        private string GenerateHash(string toHash)
         {
-            string toHash = money.id + money.value + money.ownerId + money.dated;
-
             byte[] bytes = Encoding.Unicode.GetBytes(toHash);
             SHA256Managed sha = new SHA256Managed();
             byte[] hash = sha.ComputeHash(bytes);
@@ -387,6 +386,7 @@ namespace MadMoney
         private CachierDBTool cachierDbTool = new CachierDBTool();
 
         private APKTree apkTree = APKTree.APKTreeInstance();
+        private DiscoveredLocationsDBTool discoveredLocationdb;
 
         private void UpdateFetchedMoneyStatus(string userAddressId)
         {
@@ -456,6 +456,17 @@ namespace MadMoney
 
         private string EncryptString(string inputString, string jsonPublicKey)
         {
+            RSACryptoServiceProvider rsaCryptoServiceProvider = RSACryptoServiceProviderFromPublicKey(jsonPublicKey);
+
+            byte[] bytes = Encoding.UTF8.GetBytes(inputString);
+
+            byte[] encryptedBytes = rsaCryptoServiceProvider.Encrypt(bytes, false);
+
+            return Convert.ToBase64String(encryptedBytes);
+        }
+
+        private RSACryptoServiceProvider RSACryptoServiceProviderFromPublicKey(string jsonPublicKey)
+        {
             RSAParameters rsaParameter = new RSAParameters();
 
             PublicKey publicKey = JsonDeserialize<PublicKey>(jsonPublicKey);
@@ -468,11 +479,7 @@ namespace MadMoney
 
             rsaCryptoServiceProvider.ImportParameters(rsaParameter);
 
-            byte[] bytes = Encoding.UTF8.GetBytes(inputString);
-
-            byte[] encryptedBytes = rsaCryptoServiceProvider.Encrypt(bytes, false);
-
-            return Convert.ToBase64String(encryptedBytes);
+            return rsaCryptoServiceProvider;
         }
 
         private T JsonDeserialize<T>(string jsonString)
@@ -510,9 +517,157 @@ namespace MadMoney
         private void SaveTeleportingLocations(Location[] locations)
         {
             TelePortingLocationDb tpLocationDb = new TelePortingLocationDb();
-            tpLocationDb.saveLocations(locations);
+            List<GeofenceLocation> geofenceLocations = new List<GeofenceLocation>();
+
+            foreach (var location in locations)
+            {
+                geofenceLocations.Add(GeofenceLocation.get(location));
+            }
+            tpLocationDb.saveLocations(geofenceLocations);
         }
 
         #endregion
+
+
+        public bool DiscoveredLocations(DiscoveredLocationsRQ request)
+        {
+            if (IsValidRequest(request))
+            {
+                try
+                {
+                    if (IsValidLocationsData(request))
+                    {
+                        using (var scope = new System.Transactions.TransactionScope())
+                        {
+                            SaveDiscoveredLocationsWRTUserAddress(request);
+
+                            scope.Complete();
+                        }
+                        return true;
+                    }
+                }
+                catch (Exception)
+                { return false; }
+            }
+            return false;
+        }
+
+        private void SaveDiscoveredLocationsWRTUserAddress(DiscoveredLocationsRQ request)
+        {
+            DiscoveredLocationsDBTool discoveredLocationDB = new DiscoveredLocationsDBTool();
+            foreach (var location in request.discoveredLocations)
+            {
+                discoveredLocationDB.StoreUserDiscoveredLocations(request.userAddressId, location.RequestId, location.DateAndTimeOfDiscover);
+            }
+        }
+
+        private bool IsValidLocationsData(DiscoveredLocationsRQ request)
+        {
+            string userAddressId = request.userAddressId;
+            if (IsValidUserAddress(userAddressId))
+            {
+                var userPublicKey = APKTree.APKTreeInstance().GetPublicKey(userAddressId);
+                string verifyigData = GetVerifyingRequest(request);
+                if (!string.IsNullOrEmpty(userPublicKey) && IsValidSignature(userPublicKey, verifyigData, request.signature))
+                    return true;
+            }
+            return false;
+        }
+
+        private bool IsValidSignature(string userPublicKey, string verifyigData, string signature)
+        {
+            try
+            {
+                string hash = GenerateHash(verifyigData);
+                RSACryptoServiceProvider RSA = RSACryptoServiceProviderFromPublicKey(userPublicKey);
+                bool verify = RSA.VerifyData(Encoding.UTF8.GetBytes(verifyigData), new SHA256Managed(), Convert.FromBase64String(signature));
+                if (verify == true)
+                    return true;
+            }
+            catch (Exception )
+            { }
+            return false;
+        }
+
+        private string GetVerifyingRequest(DiscoveredLocationsRQ request)
+        {
+            string result = "";
+            foreach (var pos in request.discoveredLocations)
+            {
+                result += pos.RequestId;
+                result += pos.DateAndTimeOfDiscover;
+            }
+            result += request.userAddressId;
+            return result;
+        }
+
+        private bool IsValidUserAddress(string userAddressId)
+        {
+            usersDBTool.ValidateUsers(userAddressId);
+            return true;
+        }
+
+        private bool IsValidRequest(DiscoveredLocationsRQ request)
+        {
+            if (request.discoveredLocations == null || request.discoveredLocations.Count() == 0 ||
+                string.IsNullOrEmpty(request.userAddressId) || string.IsNullOrEmpty(request.signature))
+                return false;
+            return true;
+        }
+
+
+
+        public bool BackgroundTasks()
+        {
+            try
+            {
+                DiscoveredLocationTask();
+            }
+            catch (Exception )
+            {
+                return false;
+            }
+            return true;
+        }
+
+        private void DiscoveredLocationTask()
+        {
+            discoveredLocationdb = new DiscoveredLocationsDBTool();
+            List<UserGeoDiscoveredLocation> discoveredLocationList = discoveredLocationdb.SelectAllDiscoveredLocations();
+
+            foreach (var location in discoveredLocationList)
+            {
+                HandleDiscoveredLocation(location);
+            }
+        }
+
+        private void HandleDiscoveredLocation(UserGeoDiscoveredLocation location)
+        {
+            try {
+                TelePortingLocationDb teleDb = new TelePortingLocationDb();
+                var locationData = teleDb.getTLocation(location.geoRequestId);
+
+                var userAddressId = location.userAddressId;
+
+                usersDBTool.ValidateUsers(userAddressId);
+
+                int amountToDeposit = CalculateAmountToDepositOfTelePosition(locationData);
+
+                CashierServiceWrapper.DepositSameAmount(userAddressId, amountToDeposit);
+
+                discoveredLocationdb.UpdateOperationStatus(location.id);
+            }
+            catch (Exception e) { throw new Exception("Error while handling geo location " 
+                + location.geoRequestId + " of " + location.userAddressId + e.StackTrace); }
+        }
+
+        private int CalculateAmountToDepositOfTelePosition(GeofenceLocation locationData)
+        {
+            int value = 0;
+            var rating = locationData.rating;
+            value = rating * 2;
+            return value;
+        }
+
     }
 }

@@ -82,5 +82,23 @@ namespace MadMoney
             UriTemplate = "GetTLocations")]
 
         GetTLocationsRS GetTLocations(GetTlocationsRQ data);
+
+        [OperationContract]
+        [WebInvoke(Method = "POST",
+            ResponseFormat = WebMessageFormat.Json,
+            RequestFormat = WebMessageFormat.Json,
+            BodyStyle = WebMessageBodyStyle.WrappedRequest,
+            UriTemplate = "discoveredLocations")]
+
+        bool DiscoveredLocations(DiscoveredLocationsRQ data);
+
+        [OperationContract]
+        [WebInvoke(Method = "GET",
+            ResponseFormat = WebMessageFormat.Json,
+            BodyStyle = WebMessageBodyStyle.WrappedRequest,
+            UriTemplate = "BackgroundTasks")]
+
+        bool BackgroundTasks();
+        
     }
 }

@@ -9,13 +9,13 @@ namespace MadMoney
     [DataContract]
     public class GetTLocationsRS
     {
-        public GetTLocationsRS(List<Position> position, bool isSuccess)
+        public GetTLocationsRS(List<GeofenceLocation> position, bool isSuccess)
         {
             this.tLocations = position;
             this.IsSuccess = isSuccess;
         }
         [DataMember(Name = "TLocations")]
-        public List<Position> tLocations { get; set; }
+        public List<GeofenceLocation> tLocations { get; set; }
 
         [DataMember(Name = "IsSuccess")]
         public bool IsSuccess { get; set; }
